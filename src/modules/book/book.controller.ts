@@ -6,22 +6,19 @@ import {
     Post,
     Patch,
     Delete,
-    ParseIntPipe,
-    HttpStatus,
     ValidationPipe,
 
 } from "@nestjs/common";
-import {book as BookModel, author as AuthorModel } from "@prisma/client";
+import {book as BookModel } from "@prisma/client";
 import { createBookDto, patchBookDto } from "src/dto/book";
 import { PrismaService } from "../prisma/prisma.service";
 import { CustomParseIntPipe } from "src/pipes/parseInt.pipe";
 import { CustomValidateDatePipe } from "src/pipes/parseDate.pipe";
 
 
-
 @Controller()
 export class BookController {
-    constructor(private readonly prismaService: PrismaService) {} //add service
+    constructor(private readonly prismaService: PrismaService) {}
 
     @Get('books')
     async getFilteredBooks(): Promise<BookModel[]> {
@@ -63,7 +60,7 @@ export class BookController {
             }}
         )
 
-        // add new author
+        // add new author if it doesn't exist
         if (!author) {
             return this.prismaService.book.create({
                 data: {
@@ -105,6 +102,7 @@ export class BookController {
         ) patchData: patchBookDto,
     ): Promise<BookModel> {
 
+        // could be a pipe
         const data = {
             title: patchData?.title,
             year:  patchData.year ? new Date(patchData.year) : undefined,
@@ -121,11 +119,14 @@ export class BookController {
         })
     }
 
-    // @Delete('remove-book/:id')
-    // async deleteBook(@Param('id') id: string): string {
-    //     // try rm resource
-    //     // raise error if did not
-    //     // return 'complete' if deletion is goooood
-    // }
+    @Delete('remove-book/:id')
+    async deleteBook(
+        @Param(
+            'id', new CustomParseIntPipe()
+        ) id: number): Promise<BookModel> {
+            return this.prismaService.book.delete({
+                where: {id: id}
+            })
+    }
 
 }
