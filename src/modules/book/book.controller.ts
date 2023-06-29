@@ -8,12 +8,14 @@ import {
     Delete,
     ParseIntPipe,
     HttpStatus,
+    ValidationPipe,
 
 } from "@nestjs/common";
-import {book as BookModel } from "@prisma/client";
+import {book as BookModel, author as AuthorModel } from "@prisma/client";
 import { createBookDto, patchBookDto } from "src/dto/book";
 import { PrismaService } from "../prisma/prisma.service";
 import { CustomParseIntPipe } from "src/pipes/parseInt.pipe";
+import { CustomValidateDatePipe } from "src/pipes/parseDate.pipe";
 
 
 
@@ -39,23 +41,85 @@ export class BookController {
      })
     }
 
+    @Post('create-book')
+    async createBook(
+        @Body(
+            new ValidationPipe(),
+            new CustomValidateDatePipe()
+        ) postData: createBookDto,
+    ): Promise<BookModel> {
+        const {
+            title,
+            authorFirstName,
+            authorLastName,
+            year,
+        } = postData
 
-    // @Post('create-book')
-    // async createBook(
-    //     @Body() postData: createBookDto,
-    // ): Promise<BookModel> {
-    //     // create new book and return
-    //     // validate req body with the right info
-    // }
+        const author = await this.prismaService.author.findFirst(
+            { where: {
+                firstName: authorFirstName,
+                lastName: authorLastName,
+                middleName: postData?.authorMiddleName,
+            }}
+        )
 
-    // @Patch('update-book')
-    // async updateBook(
-    //     @Body() patchData: patchBookDto,
-    // ): Promise<BookModel> {
-    //     // do patch here
-    //     // validate obj has at least some props
-    //     // needed for update
-    // }
+        // add new author
+        if (!author) {
+            return this.prismaService.book.create({
+                data: {
+                    title: title,
+                    author: {
+                        create: {
+                            firstName: authorFirstName,
+                            lastName: authorLastName,
+                            middleName: postData?.authorMiddleName
+                        }
+                    },
+                    year: new Date(year),
+                    description: postData?.description
+                }
+            })
+        }
+
+
+        return this.prismaService.book.create({
+            data: {
+                title,
+                author: {
+                    connect: {
+                        id: author.id
+                    }
+                },
+                year: new Date(year),
+                description: postData?.description
+            }
+        })
+    }
+
+    @Patch('update-book/:id')
+    async updateBook(
+        @Param('id', new CustomParseIntPipe()) id: number,
+        @Body(
+            new ValidationPipe(),
+            new CustomValidateDatePipe()
+        ) patchData: patchBookDto,
+    ): Promise<BookModel> {
+
+        const data = {
+            title: patchData?.title,
+            year:  patchData.year ? new Date(patchData.year) : undefined,
+            description: patchData?.description,
+        }
+        // remove any undefined values
+        Object.keys(data).forEach(
+            key => data[key] === undefined && delete data[key]
+        )
+
+        return this.prismaService.book.update({
+            where: {id: id},
+            data: data
+        })
+    }
 
     // @Delete('remove-book/:id')
     // async deleteBook(@Param('id') id: string): string {
