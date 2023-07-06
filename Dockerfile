@@ -1,5 +1,5 @@
 
-FROM node:18.16.1 AS build
+FROM node:18.16.1 AS development
 
 WORKDIR /app
 
@@ -11,19 +11,21 @@ RUN npx prisma generate
 
 COPY . .
 
-RUN npm run build
+CMD npm run start:dev
 
-FROM node:18.16.1 AS production
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
+# TODO - figure out packaging - problems with packing prisma client to dist
+# FROM node:18.16.1 AS production
 
-WORKDIR /app
+# ARG NODE_ENV=production
+# ENV NODE_ENV=${NODE_ENV}
 
-COPY package*.json ./
+# WORKDIR /app
 
-RUN npm ci
+# COPY package*.json ./
 
-COPY --from=build /app/dist ./dist
+# RUN npm ci
 
-CMD node dist/src/main
+# COPY --from=build /app/dist ./dist
+
+# CMD node dist/src/main

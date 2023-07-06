@@ -5,6 +5,10 @@ services:
     build:
       context: ./.
       dockerfile: Dockerfile
+    ports:
+      - 8794:8794
+    expose:
+      - 8794
     depends_on:
       - prism_migration
       - postgres
