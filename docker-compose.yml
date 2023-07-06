@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  nest_app:
+    container_name: nest_app
+    build:
+      context: ./.
+      dockerfile: Dockerfile
+    depends_on:
+      - prism_migration
+      - postgres
+
+
+  prism_migration:
+    build:
+      context: ./.
+      dockerfile: ./prisma/Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - HOST=postgres_container
+      - PORT=5432
+      - PASSWORD=password
+      - DATABASE=mydb
+      - PG_USER=postgres
+      - DATABASE_URL=postgresql://${PG_USER}:${PASSWORD}@postgres_container:${PORT}/${DATABASE}
+
+
+  postgres:
+    container_name: postgres_container
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    ports:
+      - 5432:5432
+    expose:
+      - 5432
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

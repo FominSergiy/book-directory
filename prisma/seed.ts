@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import { book as BookModel } from "@prisma/client";
-import { author as AuthorModel } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
