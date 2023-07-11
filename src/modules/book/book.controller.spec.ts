@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { book as BookModel } from "@prisma/client";
 import { author as AuthorModel } from "@prisma/client";
 import { Test, TestingModule } from '@nestjs/testing';
+import { createBookDto } from "src/dto/book";
 
 const booksTestArray: BookModel[] = [
     {
@@ -37,9 +38,9 @@ const booksTestArray: BookModel[] = [
 const singleBook: BookModel = booksTestArray[0];
 const singleAuthor: AuthorModel = {
     id: 123,
-    firstName: 'Chuck',
-    lastName: 'Cheezy',
-    middleName: null,
+    firstName: 'Aldous',
+    lastName: 'Huxley',
+    middleName: undefined,
 }
 
 
@@ -88,6 +89,82 @@ describe('BookController', () => {
             const books = await controller.getFilteredBooks();
             expect(books).toEqual(booksTestArray);
             expect(prisma.book.findMany).toHaveBeenCalled();
+        })
+    })
+
+    describe('getBookById', () => {
+
+        it('Should return a book', async () => {
+            const book: BookModel = await controller.getBookById(1);
+
+            expect(book).toEqual(singleBook);
+            // can check args passed to methods, NEAT
+            expect(prisma.book.findUnique).toHaveBeenCalledWith({
+                where: {id: 1}
+            })
+        })
+    })
+
+    describe('createBook', () => {
+        it('Should create a book with an existing author', async () => {
+            const bookData: createBookDto = {
+                title: 'Brave New World',
+                authorFirstName: 'Aldous',
+                authorLastName: 'Huxley',
+                year: '1932-01-01',
+            }
+            const book: BookModel = await controller.createBook(bookData);
+
+            expect(book).toEqual(singleBook);
+            expect(prisma.author.findFirst).toHaveBeenCalled();
+            //existing author, connect on authorId
+            expect(prisma.book.create).toHaveBeenCalledWith(
+                {
+                    data: {
+                        title: bookData.title,
+                        author: {
+                            connect: {
+                                id: singleAuthor.id
+                            }
+                        },
+                        year: new Date(bookData.year),
+                        description: undefined,
+                    }
+                }
+            )
+        })
+
+        it('Should create a book and an author', async () => {
+            // override prisma service mock return to undefined for author
+            db.author.findFirst = jest.fn().mockReturnValue(undefined);
+
+            const bookData: createBookDto = {
+                title: 'Brave New World',
+                authorFirstName: 'Aldous',
+                authorLastName: 'Huxley',
+                year: '1932-01-01',
+            }
+            const book: BookModel = await controller.createBook(bookData);
+
+            expect(book).toEqual(singleBook);
+            expect(prisma.author.findFirst).toHaveBeenCalled();
+            // call to create a book with an author
+            expect(prisma.book.create).toHaveBeenCalledWith(
+                {
+                    data: {
+                        title: bookData.title,
+                        author: {
+                            create: {
+                                firstName: bookData.authorFirstName,
+                                lastName: bookData.authorLastName,
+                                middleName: undefined
+                            },
+                        },
+                        year: new Date(bookData.year),
+                        description: undefined,
+                    }
+                }
+            )
         })
     })
 })
