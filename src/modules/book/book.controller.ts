@@ -9,7 +9,7 @@ import {
     ValidationPipe,
 
 } from "@nestjs/common";
-import {book as BookModel } from "@prisma/client";
+import { book as BookModel } from "@prisma/client";
 import { createBookDto, patchBookDto } from "src/dto/book";
 import { PrismaService } from "../prisma/prisma.service";
 import { CustomParseIntPipe } from "src/pipes/parseInt.pipe";
