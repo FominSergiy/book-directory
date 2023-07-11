@@ -3,7 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { book as BookModel } from "@prisma/client";
 import { author as AuthorModel } from "@prisma/client";
 import { Test, TestingModule } from '@nestjs/testing';
-import { createBookDto } from "src/dto/book";
+import { createBookDto, patchBookDto } from "src/dto/book";
 
 const booksTestArray: BookModel[] = [
     {
@@ -93,7 +93,6 @@ describe('BookController', () => {
     })
 
     describe('getBookById', () => {
-
         it('Should return a book', async () => {
             const book: BookModel = await controller.getBookById(1);
 
@@ -165,6 +164,40 @@ describe('BookController', () => {
                     }
                 }
             )
+        })
+    })
+
+    describe('updateBook', () => {
+        it('Updates a book', async () => {
+            const updateBookData: patchBookDto = {
+                year: '2022-01-01',
+                title: 'Fahrenheit 401',
+            }
+            const id: number = 1;
+
+            const book: BookModel = await controller.updateBook(id, updateBookData);
+
+            expect(book).toEqual(singleBook);
+            expect(prisma.book.update).toHaveBeenCalledWith({
+                where: { id: id },
+                data: {
+                    // no description - should have been sanitized as it's undefined
+                    year: new Date(updateBookData.year),
+                    title: updateBookData.title
+                }
+            })
+        })
+    })
+
+    describe('deleteBook', () => {
+        it('Deletes a book', async () => {
+            const id: number = 1;
+            const book: BookModel = await controller.deleteBook(id);
+
+            expect(book).toEqual(singleBook);
+            expect(prisma.book.delete).toHaveBeenCalledWith({
+                where: {id: id}
+            })
         })
     })
 })
