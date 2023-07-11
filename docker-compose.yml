@@ -13,6 +13,11 @@ services:
       - prism_migration
       - postgres
 
+  nest_unit_tests:
+    build:
+      context: ./.
+      dockerfile: Dockerfile
+    command: npm run test
 
   prism_migration:
     build:
