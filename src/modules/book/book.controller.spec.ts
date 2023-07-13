@@ -3,7 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { book as BookModel } from "@prisma/client";
 import { author as AuthorModel } from "@prisma/client";
 import { Test, TestingModule } from '@nestjs/testing';
-import { createBookDto, patchBookDto } from "src/dto/book";
+import { createBookDto, patchBookDto } from "src/modules/book/book";
 
 const booksTestArray: BookModel[] = [
     {
