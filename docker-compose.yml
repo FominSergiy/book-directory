@@ -12,6 +12,8 @@ services:
     depends_on:
       - prism_migration
       - postgres
+    volumes:
+      - ./src:/app/src
 
   nest_unit_tests:
     build:
