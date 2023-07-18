@@ -1,5 +1,5 @@
 import { PipeTransform, Injectable, ArgumentMetadata, NotAcceptableException } from '@nestjs/common';
-import { createBookDto, patchBookDto } from 'src/dto/book';
+import { createBookDto, patchBookDto } from 'src/modules/book/book';
 
 
 @Injectable()

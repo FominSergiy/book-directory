@@ -12,7 +12,14 @@ services:
     depends_on:
       - prism_migration
       - postgres
+    volumes:
+      - ./src:/app/src
 
+  nest_unit_tests:
+    build:
+      context: ./.
+      dockerfile: Dockerfile
+    command: npm run test
 
   prism_migration:
     build:
